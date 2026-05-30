@@ -21,8 +21,35 @@ class GeneroController extends Controller
         return array_merge(
             parent::behaviors(),
             [
+                'access' => [
+                    'class' => \yii\filters\AccessControl::class,
+                    'only' => ['index', 'view', 'create', 'update', 'delete'],
+                    'rules' => [
+                        // 1. Cualquier persona (invitado o logueado) puede ver la lista y el detalle de géneros
+                        [
+                            'allow' => true,
+                            'actions' => ['index', 'view'],
+                            'roles' => ['?', '@'],
+                        ],
+                        // 2. Cualquier usuario logueado puede crear un nuevo género cinematográfico
+                        [
+                            'allow' => true,
+                            'actions' => ['create'],
+                            'roles' => ['@'],
+                        ],
+                        // 3. Solo el administrador tiene permisos para modificar o eliminar géneros
+                        [
+                            'allow' => true,
+                            'actions' => ['update', 'delete'],
+                            'roles' => ['@'],
+                            'matchCallback' => function ($rule, $action) {
+                                return Yii::$app->user->identity->role == 'admin';
+                            }
+                        ],
+                    ],
+                ],
                 'verbs' => [
-                    'class' => VerbFilter::className(),
+                    'class' => \yii\filters\VerbFilter::class,
                     'actions' => [
                         'delete' => ['POST'],
                     ],

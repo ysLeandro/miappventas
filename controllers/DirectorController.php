@@ -21,8 +21,35 @@ class DirectorController extends Controller
         return array_merge(
             parent::behaviors(),
             [
+                'access' => [
+                    'class' => \yii\filters\AccessControl::class,
+                    'only' => ['index', 'view', 'create', 'update', 'delete'],
+                    'rules' => [
+                        // 1. Cualquier persona (invitado o logueado) puede ver la lista y el detalle de directores
+                        [
+                            'allow' => true,
+                            'actions' => ['index', 'view'],
+                            'roles' => ['?', '@'],
+                        ],
+                        // 2. Cualquier usuario logueado puede agregar/crear un nuevo director
+                        [
+                            'allow' => true,
+                            'actions' => ['create'],
+                            'roles' => ['@'],
+                        ],
+                        // 3. Solo el administrador puede modificar o eliminar directores
+                        [
+                            'allow' => true,
+                            'actions' => ['update', 'delete'],
+                            'roles' => ['@'],
+                            'matchCallback' => function ($rule, $action) {
+                                return Yii::$app->user->identity->role == 'admin';
+                            }
+                        ],
+                    ],
+                ],
                 'verbs' => [
-                    'class' => VerbFilter::className(),
+                    'class' => \yii\filters\VerbFilter::class,
                     'actions' => [
                         'delete' => ['POST'],
                     ],

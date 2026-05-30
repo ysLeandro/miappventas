@@ -19,17 +19,42 @@ class PeliculaController extends Controller
      */
     public function behaviors()
     {
-        return array_merge(
-            parent::behaviors(),
-            [
-                'verbs' => [
-                    'class' => VerbFilter::className(),
-                    'actions' => [
-                        'delete' => ['POST'],
+        return [
+            'access' => [
+                'class' => \yii\filters\AccessControl::class,
+                // Aplicamos el filtro solo a las acciones del CRUD de películas
+                'only' => ['index', 'view', 'create', 'update', 'delete'],
+                'rules' => [
+                    // 1. Permitir a CUALQUIER persona (invitados y logueados) ver las películas
+                    [
+                        'allow' => true,
+                        'actions' => ['index', 'view'],
+                        'roles' => ['?', '@'], 
+                    ],
+                    // 2. Permitir CREAR películas a CUALQUIER usuario que haya iniciado sesión
+                    [
+                        'allow' => true,
+                        'actions' => ['create'],
+                        'roles' => ['@'], // '@' significa cualquier usuario autenticado
+                    ],
+                    // 3. Permitir UPDATE y DELETE estrictamente al usuario con rol 'admin'
+                    [
+                        'allow' => true,
+                        'actions' => ['update', 'delete'],
+                        'roles' => ['@'],
+                        'matchCallback' => function ($rule, $action) {
+                            return Yii::$app->user->identity->role == 'admin';
+                        }
                     ],
                 ],
-            ]
-        );
+            ],
+            'verbs' => [
+                'class' => \yii\filters\VerbFilter::class,
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
+        ];
     }
 
     /**
