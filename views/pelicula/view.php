@@ -16,47 +16,53 @@ $this->params['breadcrumbs'][] = $this->title;
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a(Yii::t('app', 'Update'), ['update', 'idpelicula' => $model->idpelicula], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a(Yii::t('app', 'Delete'), ['delete', 'idpelicula' => $model->idpelicula], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => Yii::t('app', 'Are you sure you want to delete this item?'),
-                'method' => 'post',
-            ],
-        ]) ?>
+        <?php if (!Yii::$app->user->isGuest && Yii::$app->user->identity->role == 'admin'): ?>
+            <?= Html::a(Yii::t('app', 'Update'), ['update', 'idpelicula' => $model->idpelicula], ['class' => 'btn btn-primary']) ?>
+            <?= Html::a(Yii::t('app', 'Delete'), ['delete', 'idpelicula' => $model->idpelicula], [
+                'class' => 'btn btn-danger',
+                'data' => [
+                    'confirm' => Yii::t('app', 'Are you sure you want to delete this item?'),
+                    'method' => 'post',
+                ],
+            ]) ?>
+        <?php endif; ?>
     </p>
 
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'idpelicula',
+            // Convertimos 'idpelicula' en array para controlar su visibilidad de forma condicional
             [
-            'attribute' => 'portada',
-            'format' => 'html',
-            'value' => function($model){
-                return Html::img(
-                    Yii::getAlias('@web') . '/portadas/' . $model->portada,
-                    ['style' => 'width: 100px']
-                );
-            }
+                'attribute' => 'idpelicula',
+                'visible' => !Yii::$app->user->isGuest && Yii::$app->user->identity->role == 'admin',
             ],
-
+            [
+                'attribute' => 'portada',
+                'format' => 'html',
+                'value' => function($model){
+                    if ($model->portada) {
+                        return Html::img(
+                            Yii::getAlias('@web') . '/portadas/' . $model->portada,
+                            ['style' => 'width: 100px']
+                        );
+                    }
+                    return null;
+                }
+            ],
             'titulo',
             'sipnopsis',
             'anio',
             'duracion',
-            'director_iddirector',
-        [
-            'attribute' => 'director_iddirector',
-            'label' => 'Director',
-            'value' => $model->directorIddirector->nombre,
+            [
+                'attribute' => 'director_iddirector',
+                'label' => 'Director',
+                'value' => isset($model->directorIddirector) ? $model->directorIddirector->nombre : null,
+            ],
+            [
+                'label' => 'Actores',
+                'value' => implode(', ', yii\helpers\ArrayHelper::getColumn($model->fkIdactors, 'nombres')),
+            ],
         ],
-[
-    'label' => 'Actores',
-    'value' => implode(', ', yii\helpers\ArrayHelper::getColumn($model->fkIdactors, 'nombres')),
-],
-        ],
-
     ]) ?>
 
 </div>

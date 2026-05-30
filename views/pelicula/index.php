@@ -17,9 +17,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <h1><?= Html::encode($this->title) ?></h1>
 
-    <p>
-        <?= Html::a(Yii::t('app', 'Create Pelicula'), ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
+    <?php if (!Yii::$app->user->isGuest): ?>
+        <p>
+            <?= Html::a(Yii::t('app', 'Create Pelicula'), ['create'], ['class' => 'btn btn-success']) ?>
+        </p>
+    <?php endif; ?>
 
     <?php Pjax::begin(); ?>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -50,7 +52,22 @@ $this->params['breadcrumbs'][] = $this->title;
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Pelicula $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'idpelicula' => $model->idpelicula]);
-                 }
+                },
+                // Controlamos de forma dinámica la visibilidad de los botones de la tabla
+                'visibleButtons' => [
+                    // El icono de la "boca de ojo" (view) lo ven todos (invitados y logueados)
+                    'view' => true, 
+                    
+                    // El icono del lápiz (update) solo si no es invitado y su rol es admin
+                    'update' => function ($model, $key, $index) {
+                        return !Yii::$app->user->isGuest && Yii::$app->user->identity->role == 'admin';
+                    },
+                    
+                    // El icono del tacho de basura (delete) solo si no es invitado y su rol es admin
+                    'delete' => function ($model, $key, $index) {
+                        return !Yii::$app->user->isGuest && Yii::$app->user->identity->role == 'admin';
+                    },
+                ],
             ],
         ],
     ]); ?>
