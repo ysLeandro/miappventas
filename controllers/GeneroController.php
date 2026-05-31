@@ -139,7 +139,28 @@ class GeneroController extends Controller
      */
     public function actionDelete($idgenero)
     {
-        $this->findModel($idgenero)->delete();
+        $model = $this->findModel($idgenero);
+
+        // 🛡️ Iniciamos una transacción segura para la base de datos
+        $transaction = Yii::$app->db->beginTransaction();
+
+        try {
+            // 🍿 1. Rompemos la relación en la tabla intermedia usando el campo correcto: fk_idgenero
+            Yii::$app->db->createCommand()
+                ->delete('pelicula_has_genero', ['fk_idgenero' => $idgenero])
+                ->execute();
+
+            // 💥 2. Ahora que ninguna película depende de este género, lo borramos con seguridad
+            $model->delete();
+
+            // Confirmamos la operación
+            $transaction->commit();
+
+        } catch (\Exception $e) {
+            // Si algo sale mal, revertimos todo para proteger el sistema
+            $transaction->rollBack();
+            throw $e;
+        }
 
         return $this->redirect(['index']);
     }

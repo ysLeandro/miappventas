@@ -139,7 +139,26 @@ class DirectorController extends Controller
      */
     public function actionDelete($iddirector)
     {
-        $this->findModel($iddirector)->delete();
+        $model = $this->findModel($iddirector);
+
+        // 🔍 1. Consultamos de forma rápida si existen películas vinculadas a este director
+        $tienePeliculas = (new \yii\db\Query())
+            ->from('pelicula')
+            ->where(['director_iddirector' => $iddirector])
+            ->exists();
+
+        if ($tienePeliculas) {
+            // 🛑 2. Bloqueamos el borrado y notificamos al usuario
+            Yii::$app->session->setFlash('error', "No se puede eliminar al director '{$model->nombre}' porque tiene películas asignadas en el catálogo.");
+        } else {
+            // ✅ 3. Si está libre de dependencias, procedemos con el borrado seguro
+            try {
+                $model->delete();
+                Yii::$app->session->setFlash('success', "Director eliminado correctamente.");
+            } catch (\Exception $e) {
+                Yii::$app->session->setFlash('error', "Ocurrió un error inesperado al intentar eliminar al director.");
+            }
+        }
 
         return $this->redirect(['index']);
     }

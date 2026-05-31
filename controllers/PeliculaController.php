@@ -186,7 +186,33 @@ class PeliculaController extends Controller
      */
     public function actionDelete($idpelicula)
     {
-        $this->findModel($idpelicula)->delete();
+        $model = $this->findModel($idpelicula);
+
+        // 🛡️ Iniciamos una transacción para asegurar que todo ocurra en orden
+        $transaction = Yii::$app->db->beginTransaction();
+
+        try {
+            // 🎬 1. Limpieza directa por SQL en la tabla de actores
+            Yii::$app->db->createCommand()
+                ->delete('pelicula_has_actor', ['fk_idpelicula' => $idpelicula])
+                ->execute();
+
+            // 🍿 2. Limpieza directa por SQL en la tabla de géneros (¡Activado e importante!)
+            Yii::$app->db->createCommand()
+                ->delete('pelicula_has_genero', ['fk_idpelicula' => $idpelicula])
+                ->execute();
+
+            // 💥 3. Con todas las restricciones rotas en la base de datos, eliminamos la película
+            $model->delete();
+
+            // Confirmamos los cambios de la transacción
+            $transaction->commit();
+
+        } catch (\Exception $e) {
+            // Si algo falla, revertimos todo para no dejar datos corruptos
+            $transaction->rollBack();
+            throw $e;
+        }
 
         return $this->redirect(['index']);
     }

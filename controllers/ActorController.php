@@ -139,7 +139,28 @@ class ActorController extends Controller
      */
     public function actionDelete($idactor)
     {
-        $this->findModel($idactor)->delete();
+        $model = $this->findModel($idactor);
+
+        // 🛡️ Transacción segura para limpiar la base de datos antes de borrar el registro
+        $transaction = Yii::$app->db->beginTransaction();
+
+        try {
+            // 🎬 1. Removemos todas las vinculaciones del actor en la tabla intermedia
+            Yii::$app->db->createCommand()
+                ->delete('pelicula_has_actor', ['fk_idactor' => $idactor])
+                ->execute();
+
+            // 💥 2. Ahora que no hay películas amarradas a él, borramos el actor de su tabla principal
+            $model->delete();
+
+            // Guardamos todos los cambios
+            $transaction->commit();
+
+        } catch (\Exception $e) {
+            // Deshacemos todo en caso de cualquier eventualidad externa
+            $transaction->rollBack();
+            throw $e;
+        }
 
         return $this->redirect(['index']);
     }
