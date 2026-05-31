@@ -6,6 +6,7 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
+
 /** @var yii\web\View $this */
 /** @var app\models\PeliculaSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -29,6 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
+        'summary' => false, // 🔥 ESTO ELIMINA EL CUADRO DE TEXTO "Showing X-X of X items"
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
 
@@ -38,9 +40,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'portada',
                 'format' => 'html',
                 'value' => function(Pelicula $model){
-                    if($model->portada)
-                        return Html::img(Yii::getAlias('@web') . '/portadas/' . $model->portada, ['style' => 'width: 50px']);
-                    return null;
+                    if($model->portada) {
+                        // ✨ Se estiliza la imagen para darle el look premium (redondeada y con sombra sutil)
+                        return Html::img(Yii::getAlias('@web') . '/portadas/' . $model->portada, [
+                            'style' => 'width: 65px; height: auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); display: block;'
+                        ]);
+                    }
+                    return '<span class="text-muted small">Sin foto</span>';
                 }
             ],
             'titulo',

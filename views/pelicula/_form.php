@@ -2,8 +2,10 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
-use yii\helpers\Arrayhelper;
+use yii\helpers\ArrayHelper;
 use app\models\Director;
+use app\models\Actor;
+use app\models\Genero;
 
 /** @var yii\web\View $this */
 /** @var app\models\Pelicula $model */
@@ -48,6 +50,18 @@ use app\models\Director;
                                                                                                 ->orderBy('apellido')
                                                                                                 ->asArray()
                                                                                                 ->all(), 'iddirector','nombre_completo'), ['prompt'=>'Seleccione un director', 'required'=>true]) 
+    ?>
+
+    <?= $form->field($model, 'actores_ids')->dropDownList(ArrayHelper::map(Actor::find()->select(['idactor','CONCAT(apellidos, " ", nombres) AS nombre_completo'])
+                                                                                                ->orderBy('apellidos')
+                                                                                                ->asArray()
+                                                                                                ->all(), 'idactor','nombre_completo'), ['prompt'=>'Seleccione un actor', 'required'=>true]) 
+    ?>
+
+    <?= $form->field($model, 'generos_ids')->dropDownList(ArrayHelper::map(Genero::find()->select(['idgenero','nombre'])
+                                                                                                ->orderBy('nombre')
+                                                                                                ->asArray()
+                                                                                                ->all(), 'idgenero','nombre'), ['prompt'=>'Seleccione un género', 'required'=>true]) 
     ?>
 
     <div class="form-group">

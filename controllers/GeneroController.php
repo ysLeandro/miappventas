@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use Yii;
 use app\models\Genero;
 use app\models\GeneroSearch;
 use yii\web\Controller;

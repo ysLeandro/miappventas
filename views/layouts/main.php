@@ -32,63 +32,77 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 <header id="header">
     <?php
     NavBar::begin([
-        'brandLabel' =>'Movies-Prime',
+        'brandLabel' => '🎬 Movies-Prime',
         'brandUrl' => Yii::$app->homeUrl,
-        'options' => ['class' => 'navbar-expand-md navbar-dark bg-dark fixed-top']
+        'options' => ['class' => 'navbar-expand-md navbar-dark fixed-top shadow-sm']
     ]);
+
+    // Menú Izquierdo: Navegación de secciones
     echo Nav::widget([
-        'options' => ['class' => 'navbar-nav'],
+        'options' => ['class' => 'navbar-nav me-auto'],
         'items' => [
             ['label' => 'Inicio', 'url' => ['/site/index']],
-            //['label' => 'Acerca de nosotros', 'url' => ['/site/about']],
-            //['label' => 'Contactenos', 'url' => ['/site/contact']],
-            //['label' => 'Actores', 'url' => ['/actor/index']],
-            //['label' => 'Directores', 'url' => ['/director/index']],
-            //['label' => 'Peliculas', 'url' => ['/pelicula/index']],
-            //['label' => 'Genero', 'url' => ['/genero/index']],
             [
-                'label'=> 'Gestionar peliculas',
-                'items'=>[
-                    ['label'=>'Peliculas','url'=>['/pelicula/index']],
-                    ['label'=>'Generos','url'=>['/genero/index']],
-                    ['label'=>'Actores','url'=>['/actor/index']],
-                    ['label'=>'Directores','url'=>['/director/index']],
-                    ( !Yii::$app->user->isGuest && Yii::$app->user->identity->role != 'admin') ? '' : ['label' => 'User', 'url' => ['/user/index']],
+                'label' => 'Gestionar Películas',
+                'items' => [
+                    ['label' => 'Películas', 'url' => ['/pelicula/index']],
+                    ['label' => 'Géneros', 'url' => ['/genero/index']],
+                    ['label' => 'Actores', 'url' => ['/actor/index']],
+                    ['label' => 'Directores', 'url' => ['/director/index']],
+                    // Menú condicional: Solo si el usuario es Admin ve la opción User
+                    (!Yii::$app->user->isGuest && Yii::$app->user->identity->role == 'admin') ? ['label' => 'Usuarios', 'url' => ['/user/index']] : '',
                 ],
             ],
-            Yii::$app->user->isGuest ? '' : ['label' => 'Cambiar password', 'url' => ['/user/change-password']],
+            Yii::$app->user->isGuest ? '' : ['label' => 'Cambiar Contraseña', 'url' => ['/user/change-password']],
+        ]
+    ]);
 
+    // Menú Derecho: Barra superior responsiva con el nombre y rol del usuario logueado
+    echo Nav::widget([
+        'options' => ['class' => 'navbar-nav ms-auto align-items-center'],
+        'items' => [
             Yii::$app->user->isGuest
-                ? ['label' => 'Iniciar Sesión', 'url' => ['/site/login']]
-                : '<li class="nav-item">'
-                    . Html::beginForm(['/site/logout'])
-                    . Html::submitButton(
-                        'Logout (' . Yii::$app->user->identity->apellido .' ' . Yii::$app->user->identity->nombre . ') ' . Yii::$app->user->identity->role ,
-                        ['class' => 'nav-link btn btn-link logout']
-                    )
+                ? ['label' => 'Iniciar Sesión', 'url' => ['/site/login'], 'linkOptions' => ['class' => 'btn btn-outline-primary px-3 rounded-pill text-white']]
+                : '<li class="nav-item d-flex align-items-center">'
+                    . '<span class="text-secondary small me-2">'
+                    . '👤 ' . Html::encode(Yii::$app->user->identity->nombre . ' ' . Yii::$app->user->identity->apellido)
+                    . ' <span class="badge bg-dark border border-secondary text-capitalize ms-1">' . Html::encode(Yii::$app->user->identity->role) . '</span>'
+                    . '</span>'
+                    . Html::beginForm(['/site/logout'], 'post', ['class' => 'd-inline'])
+                    . Html::submitButton('Salir', ['class' => 'logout-btn ms-2'])
                     . Html::endForm()
                     . '</li>'
         ]
     ]);
+
     NavBar::end();
     ?>
 </header>
 
-<main id="main" class="flex-shrink-0" role="main">
+<main id="main" class="flex-shrink-0" role="main" style="padding-top: 90px; margin-bottom: 40px;">
     <div class="container">
         <?php if (!empty($this->params['breadcrumbs'])): ?>
-            <?= Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]) ?>
+            <?= Breadcrumbs::widget([
+                'links' => $this->params['breadcrumbs'],
+                'options' => ['class' => 'breadcrumb mb-4']
+            ]) ?>
         <?php endif ?>
         <?= Alert::widget() ?>
         <?= $content ?>
     </div>
 </main>
 
-<footer id="footer" class="mt-auto py-3 bg-light">
+<footer id="footer" class="mt-auto py-4 text-secondary border-top border-secondary" style="background-color: #090d14 !important;">
     <div class="container">
-        <div class="row text-muted">
-            <div class="col-md-6 text-center text-md-start">&copy; Movies-Prime <?= date('Y') ?></div>
-            <div class="col-md-6 text-center text-md-end"><?= Yii::powered() ?></div>
+        <div class="row align-items-center text-center text-md-start">
+            <div class="col-md-6 mb-2 mb-md-0 text-white-50">
+                &copy; <strong>Movies-Prime</strong> <?= date('Y') ?> | Catálogo de Cine Digital. Todos los derechos reservados.
+
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <span class="badge bg-dark border border-secondary rounded-pill px-3 py-2 text-secondary">Responsive UI v2.0</span>
+                <span class="badge bg-primary rounded-pill px-3 py-2 ms-1">Bootstrap 5</span>
+            </div>
         </div>
     </div>
 </footer>

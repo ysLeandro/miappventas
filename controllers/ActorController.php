@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use Yii;
 use app\models\Actor;
 use app\models\ActorSearch;
 use yii\web\Controller;

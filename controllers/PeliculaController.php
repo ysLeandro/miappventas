@@ -9,6 +9,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\UploadedFile;
+
 /**
  * PeliculaController implements the CRUD actions for Pelicula model.
  */
@@ -98,14 +99,18 @@ class PeliculaController extends Controller
 
         if($this->request->isPost){
 
-        $transaction = Yii::$app->db->beginTransaction();
-        
-                try{
+            $transaction = Yii::$app->db->beginTransaction();
+            
+            try{
                 if($model->load($this->request->post())){
 
                     $model->imageFile = UploadedFile::getInstance($model, 'imageFile');
 
                     if($model->save() && (!$model->imageFile || $model->upload())){
+                        
+                        // Guardar la relación intermedia del actor y el género
+                        $model->saveRelaciones();
+
                         $transaction->commit();
 
                         return $this->redirect(['view', 'idpelicula' => $model->idpelicula]);
@@ -142,33 +147,35 @@ class PeliculaController extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-        public function actionUpdate($idpelicula)
-        {
-            $model = $this->findModel($idpelicula);
-            $message = '';
+    public function actionUpdate($idpelicula)
+    {
+        $model = $this->findModel($idpelicula);
+        $message = '';
 
-            if ($this->request->isPost && $model->load($this->request->post())) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
 
-                $model->imageFile = UploadedFile::getInstance($model, 'imageFile');
+            $model->imageFile = UploadedFile::getInstance($model, 'imageFile');
 
-                if ($model->save() && (!$model->imageFile || $model->upload())) {
+            if ($model->save() && (!$model->imageFile || $model->upload())) {
 
-                    return $this->redirect([
-                        'view',
-                        'idpelicula' => $model->idpelicula
-                    ]);
+                // Actualizar la relación intermedia del actor y el género
+                $model->saveRelaciones();
 
-                } else {
+                return $this->redirect([
+                    'view',
+                    'idpelicula' => $model->idpelicula
+                ]);
 
-                    $message = 'Error al guardar la película';
-                }
+            } else {
+                $message = 'Error al guardar la película';
             }
-
-            return $this->render('update', [
-                'model' => $model,
-                'message' => $message,
-            ]);
         }
+
+        return $this->render('update', [
+            'model' => $model,
+            'message' => $message,
+        ]);
+    }
 
     /**
      * Deletes an existing Pelicula model.

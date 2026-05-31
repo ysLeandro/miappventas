@@ -32,14 +32,15 @@ class UserController extends Controller
                     ],
                 ],
             ],
-                    'verbs' => [
-                    'class' => \yii\filters\VerbFilter::class,
-                    'actions' => [
-                        'delete' => ['POST'],
-                    ],
+            'verbs' => [
+                'class' => \yii\filters\VerbFilter::class,
+                'actions' => [
+                    'delete' => ['POST'],
                 ],
+            ],
         ];
     }
+    
     public function actionIndex(){
         $dataProvider = new ActiveDataProvider([
             'query' => User::find(),
@@ -55,7 +56,7 @@ class UserController extends Controller
         ]);
     }
 
-        public function actionCreate(){
+    public function actionCreate(){
         $model = new User();
         if ($model->load(Yii::$app->request->post()) ){
             if(!empty($model->password)){
@@ -106,7 +107,13 @@ class UserController extends Controller
         $model = new ChangePasswordForm();
         if($model->load(Yii::$app->request->post()) && $model->changePassword()){
             Yii::$app->session->setFlash('success', 'Password changed successfully');
-            return $this->redirect(['index']);
+            
+            // CORRECCIÓN DEL ERROR 403: Redirección inteligente según el rol
+            if (Yii::$app->user->identity->role == 'admin') {
+                return $this->redirect(['index']);
+            } else {
+                return $this->redirect(['/site/index']); // Lo mandamos a la cartelera de películas
+            }
         }
         return $this->render('change-password', [
             'model' => $model,
@@ -119,5 +126,4 @@ class UserController extends Controller
         }
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-
 }

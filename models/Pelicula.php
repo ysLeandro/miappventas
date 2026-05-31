@@ -4,6 +4,7 @@ namespace app\models;
 
 use Yii;
 use yii\web\UploadedFile;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "pelicula".
@@ -19,6 +20,10 @@ use yii\web\UploadedFile;
 class Pelicula extends \yii\db\ActiveRecord
 {
     public $imageFile;
+
+    // Propiedades virtuales añadidas para capturar las selecciones de los desplegables
+    public $actores_ids;
+    public $generos_ids;
 
     /**
      * {@inheritdoc}
@@ -38,10 +43,14 @@ class Pelicula extends \yii\db\ActiveRecord
 
             [['anio', 'director_iddirector'], 'integer'],
 
-            [['director_iddirector'], 'required'],
+            // Hacemos obligatorios los actores y géneros antes de guardar
+            [['director_iddirector', 'actores_ids', 'generos_ids'], 'required'],
 
             [['portada','sipnopsis', 'duracion'], 'string', 'max' => 255],
             [['titulo'], 'string', 'max' => 100],
+
+            // Permitir procesar las variables de los desplegables de forma segura
+            [['actores_ids', 'generos_ids'], 'safe'],
 
             [['director_iddirector'], 'exist',
                 'skipOnError' => true,
@@ -69,7 +78,46 @@ class Pelicula extends \yii\db\ActiveRecord
             'anio' => Yii::t('app', 'Año'),
             'duracion' => Yii::t('app', 'Duracion'),
             'director_iddirector' => Yii::t('app', 'Director'),
+            'actores_ids' => Yii::t('app', 'Actor'),
+            'generos_ids' => Yii::t('app', 'Género'),
         ];
+    }
+
+    /**
+     * Carga automáticamente los valores actuales al momento de editar
+     */
+    public function afterFind()
+    {
+        parent::afterFind();
+        // Tomamos el primer registro de la tabla puente para pintarlo en el desplegable único
+        $this->actores_ids = ArrayHelper::getColumn($this->peliculaHasActors, 'fk_idactor');
+        $this->generos_ids = ArrayHelper::getColumn($this->peliculaHasGeneros, 'fk_idgenero');
+    }
+
+    /**
+     * Registra los ID seleccionados en tus tablas intermedias puente
+     */
+    public function saveRelaciones()
+    {
+        // 1. Limpiamos relaciones previas en caso de actualización
+        PeliculaHasActor::deleteAll(['fk_idpelicula' => $this->idpelicula]);
+        PeliculaHasGenero::deleteAll(['fk_idpelicula' => $this->idpelicula]);
+
+        // 2. Guardar el actor seleccionado en el dropDown
+        if (!empty($this->actores_ids)) {
+            $relacionActor = new PeliculaHasActor();
+            $relacionActor->fk_idpelicula = $this->idpelicula;
+            $relacionActor->fk_idactor = $this->actores_ids;
+            $relacionActor->save(false);
+        }
+
+        // 3. Guardar el género seleccionado en el dropDown
+        if (!empty($this->generos_ids)) {
+            $relacionGenero = new PeliculaHasGenero();
+            $relacionGenero->fk_idpelicula = $this->idpelicula;
+            $relacionGenero->fk_idgenero = $this->generos_ids;
+            $relacionGenero->save(false);
+        }
     }
 
     public function upload()

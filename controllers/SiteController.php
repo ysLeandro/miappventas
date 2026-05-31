@@ -9,6 +9,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use app\models\Pelicula; // Importamos el modelo para usarlo limpiamente
 
 class SiteController extends Controller
 {
@@ -55,13 +56,22 @@ class SiteController extends Controller
     }
 
     /**
-     * Displays homepage.
+     * Displays homepage con límite de carga optimizado.
      *
      * @return string
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        // OPTIMIZACIÓN: Traemos solo las últimas 8 películas añadidas para no sobrecargar el sistema.
+        // Si prefieres que salgan 5 de golpe, puedes cambiar ->limit(8) por ->limit(5).
+        $peliculas = Pelicula::find()
+            ->orderBy('RAND()')
+            ->limit(8)
+            ->all();
+
+        return $this->render('index', [
+            'peliculas' => $peliculas,
+        ]);
     }
 
     /**
